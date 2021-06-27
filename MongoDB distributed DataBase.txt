@@ -1,0 +1,32 @@
+﻿mkdir -p /data/db
+
+
+mkdir -p /data/rs1 /data/rs2 /data/rs3
+
+
+mongod --replSet bolgeA --logpath "bolge-r1.log" --dbpath /data/rs1 --port 37017 --fork --shardsvr --smallfiles
+
+mongod --replSet bolgeB --logpath "bolge-r2.log" --dbpath /data/rs2 --port 37018 --fork --shardsvr --smallfiles
+
+mongod --replSet bolgeC --logpath "bolge-r3.log" --dbpath /data/rs3 --port 37019 --fork --shardsvr --smallfiles
+
+
+mongo --port 37017 //Master
+
+
+config = { _id: "bolge", members:[
+          { _id : 0, host : "localhost:37017" },
+          { _id : 1, host : "localhost:37018" },
+          { _id : 2, host : "localhost:37019" }]};
+
+
+rs.initiate(config)
+rs.status()
+
+db.bolgeA.insert({"sirano":"1"})
+
+mongo --port 37018
+
+rs.slaveOk();
+
+db.bolgeA.find().pretty();
